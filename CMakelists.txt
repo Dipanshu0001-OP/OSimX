@@ -1,0 +1,68 @@
+cmake_minimum_required(VERSION 3.16)
+<<<<<<< HEAD
+project(osimx VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql)
+
+file(GLOB_RECURSE SOURCES
+    "src/*.cpp"
+    "src/auth/*.cpp"
+    "src/ui/*.cpp"
+    "src/modules/scheduling/*.cpp"
+)
+
+file(GLOB_RECURSE HEADERS
+    "src/*.h"
+    "src/auth/*.h"
+    "src/ui/*.h"
+    "src/modules/scheduling/*.h"
+)
+
+add_executable(osimx
+    ${SOURCES}
+    ${HEADERS}
+    resources.qrc
+)
+
+target_include_directories(osimx PRIVATE
+    src
+    src/auth
+    src/ui
+    src/modules/scheduling
+)
+
+target_link_libraries(osimx PRIVATE
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Sql
+)
+
+if(WIN32)
+    set_target_properties(osimx PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+=======
+project(osimx)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE HEADERS "src/*.h")
+
+add_executable(osimx ${SOURCES} ${HEADERS})
+
+target_include_directories(osimx PRIVATE src)
+
+target_link_libraries(osimx PRIVATE Qt6::Core Qt6::Widgets)
+>>>>>>> dfba9977f80e13ca5b71a4f411afe79c5b13a014

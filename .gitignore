@@ -1,0 +1,32 @@
+# Build
+build/
+out/
+*.exe
+*.obj
+*.o
+*.dll
+*.a
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Qt
+*.user
+*.autosave
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# IDE
+.vs/
+.vscode/
+*.suo
+.idea/
+
+# Temporary
+*.log
+*.tmp
