@@ -6,7 +6,7 @@
 
 using namespace std;
 
-// FCFS Class - First Come First Served
+// FCFS Class - First Come First Serve Algorithm
 
 class FCFS : public CPUScheduler {
 public:
@@ -48,7 +48,8 @@ public:
         calculateValues(result);
         return result;
     }
-    
+
+    //return result
     string getAlgorithmName() const override {
         return "First Come First Served (FCFS)";
     }
