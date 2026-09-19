@@ -22,7 +22,6 @@ struct Process {
     int responseTime;     
     int remainingTime;   
     
-    // Constructor
     Process(int i = 0, int a = 0, int b = 0, int p = 0)
         : id(i), arrivalTime(a), burstTime(b), priority(p),
           startTime(-1), completionTime(0), waitingTime(0),
@@ -50,7 +49,7 @@ struct SchedulingResult {
     double throughput;               
 };
 
-// CPUScheduler Class (Abstract Base Class)
+// CPUScheduler Class
 
 class CPUScheduler {
 public:
