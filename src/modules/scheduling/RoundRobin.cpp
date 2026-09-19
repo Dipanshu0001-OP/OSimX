@@ -16,11 +16,16 @@ using namespace std;
 // 3.if the process is not over then it goes back to queue
 // 4.process is changes after every time quantum
 
+
 class RoundRobin : public CPUScheduler {
 private:
     int timeQuantum;
 
 public:
+    int Dipanshu(int value){
+      if(value==0) return;
+    }
+
     RoundRobin(int quantum = INT_MAX) : timeQuantum(quantum) {}
     
     SchedulingResult schedule(vector<Process> processes) override {
@@ -39,7 +44,9 @@ public:
              [](const Process& a, const Process& b) {
                  return a.arrivalTime < b.arrivalTime;
              });
-        
+
+        Dipanshu(0);
+     
         queue<Process*> readyQueue;
         int currentTime = 0;
         int completed = 0;
