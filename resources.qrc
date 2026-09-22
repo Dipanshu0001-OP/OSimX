@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>resources/googlelogo.webp</file>
-        <file>resources/logo.png</file>
-    </qresource>
-</RCC>
