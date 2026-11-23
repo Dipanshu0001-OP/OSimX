@@ -50,6 +50,52 @@ Each module allows users to configure simulation inputs, execute algorithms, vis
 Supported simulations can also be saved and restored through the application's database-backed history system.
 
 ---
+## Screenshots
+
+Explore OSimX through its authentication screens, dashboard, and interactive operating-system simulations.
+
+### Authentication & Dashboard
+
+| Sign in | Dashboard |
+|:---:|:---:|
+| ![OSimX sign-in screen](screenshots/login.png) | ![OSimX dashboard with simulation modules](screenshots/dashboard.png) |
+
+<details>
+<summary><strong>Saved work & account activity</strong></summary>
+
+| Saved simulations | Saved comparisons and sign-in history |
+|:---:|:---:|
+| ![Saved simulations on the OSimX dashboard](screenshots/saved-simulations.png) | ![Saved comparisons and account sign-in history](screenshots/saved-comparisons-signin-history.png) |
+
+</details>
+
+### CPU Scheduling
+
+| Process setup & algorithm comparison | Interactive execution timeline |
+|:---:|:---:|
+| ![CPU scheduling inputs and comparison metrics](screenshots/cpu-scheduling-setup.png) | ![CPU scheduling Gantt chart and step-by-step playback](screenshots/cpu-scheduling-playback.png) |
+
+### Disk Scheduling
+
+![Disk scheduling controls and interactive head-movement graph](screenshots/disk-scheduling.png)
+
+### Memory Management
+
+| Memory allocation | Page replacement |
+|:---:|:---:|
+| ![Memory allocation simulation](screenshots/memory-allocation.png) | ![FIFO page replacement simulation](screenshots/page-replacement.png) |
+
+### Deadlock Analysis
+
+![Deadlock analysis with Banker's Algorithm matrices](screenshots/deadlock-analysis.png)
+
+### File System Simulator
+
+| File operations & disk blocks | File explorer & directories |
+|:---:|:---:|
+| ![File System Simulator showing file creation and disk block map](screenshots/file-system-simulator.png) | ![File explorer showing a directory tree and files](screenshots/file-explorer.png) |
+
+---
 
 ##  Technology Stack
 
