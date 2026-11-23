@@ -1,5 +1,5 @@
 
-# OSimX 2.0 — Operating System Simulator
+# OSimX — Operating System Simulator
 
 ### Visualize. Simulate. Understand.
 
@@ -9,7 +9,7 @@
 ![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=flat-square&logo=sqlite&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-Desktop-0078D4?style=flat-square)
 
-**OSimX 2.0** is an interactive desktop application designed to simplify Operating System concepts through hands-on simulations, algorithm visualizations, and performance analysis.
+**OSimX** is an interactive desktop application designed to simplify Operating System concepts through hands-on simulations, algorithm visualizations, and performance analysis.
 
 Built with **C++17 and Qt 6**, OSimX allows students to explore CPU Scheduling, Memory Management, Disk Scheduling, Deadlock Management, and File System operations in a unified learning environment.
 
@@ -19,7 +19,7 @@ Designed for **students, educators, and OS enthusiasts**, OSimX bridges the gap 
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 - **Interactive OS Simulations** — Explore CPU Scheduling, Memory Management, Disk Scheduling, Deadlock Management, and File System operations.
 - **Algorithm Visualization** — Understand execution through Gantt charts, memory representations, and disk movement graphs.
@@ -33,17 +33,17 @@ Designed for **students, educators, and OS enthusiasts**, OSimX bridges the gap 
 
 ---
 
-## 🧠 Operating System Modules
+##  Operating System Modules
 
-OSimX 2.0 provides five interactive simulation modules covering essential Operating System concepts.
+OSimX provides five interactive simulation modules covering essential Operating System concepts.
 
 | Module | Supported Algorithms / Features |
 |--------|--------------------------------|
-| **⚙️ CPU Scheduling** | FCFS, SJF, SRTF, Round Robin, Priority Scheduling |
-| **🧩 Memory Management** | First Fit, Best Fit, Worst Fit, FIFO, LRU, Optimal Page Replacement |
-| **💽 Disk Scheduling** | FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK |
-| **🔒 Deadlock Management** | Banker's Algorithm, Deadlock Detection, Resource Request Analysis |
-| **📁 File System** | File & Directory Operations, Permissions, Contiguous, Linked & Indexed Allocation |
+| ** CPU Scheduling** | FCFS, SJF, SRTF, Round Robin, Priority Scheduling |
+| ** Memory Management** | First Fit, Best Fit, Worst Fit, FIFO, LRU, Optimal Page Replacement |
+| ** Disk Scheduling** | FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK |
+| ** Deadlock Management** | Banker's Algorithm, Deadlock Detection, Resource Request Analysis |
+| ** File System** | File & Directory Operations, Permissions, Contiguous, Linked & Indexed Allocation |
 
 Each module allows users to configure simulation inputs, execute algorithms, visualize results, and explore fundamental OS concepts.
 
@@ -51,9 +51,9 @@ Supported simulations can also be saved and restored through the application's d
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
-OSimX 2.0 is built using C++ and Qt, with a modular architecture for simulation, visualization, and data persistence.
+OSimX is built using C++ and Qt, with a modular architecture for simulation, visualization, and data persistence.
 
 | Component | Technology |
 |-----------|------------|
@@ -70,11 +70,11 @@ OSimX 2.0 is built using C++ and Qt, with a modular architecture for simulation,
 
 ---
 
-## 🚀 Installation & Setup
+##  Installation & Setup
 
 ### Prerequisites
 
-To build OSimX 2.0 from source, ensure you have:
+To build OSimX from source, ensure you have:
 
 - C++17-compatible compiler (MinGW-w64)
 - Qt 6 (Widgets and SQL modules)
@@ -119,9 +119,9 @@ For database configuration details, see [DATABASE_SETUP.md](DATABASE_SETUP.md).
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
-OSimX 2.0 follows a modular architecture that separates simulation algorithms, user interfaces, database services, and application logic.
+OSimX follows a modular architecture that separates simulation algorithms, user interfaces, database services, and application logic.
 
 ```text
 OSimX/
@@ -147,11 +147,11 @@ OSimX/
 
 ---
 
-## 👥 Team & Acknowledgments
+## Team & Acknowledgments
 
 ### Team Monolith
 
-OSimX 2.0 is developed by a dedicated team of Computer Science students at **Graphic Era Deemed to be University**, combining expertise in Operating Systems, C++ development, database management, and user interface design.
+OSimX is developed by a dedicated team of Computer Science students at **Graphic Era Deemed to be University**, combining expertise in Operating Systems, C++ development, database management, and user interface design.
 
 | Team Member | Role |
 |-------------|------|
@@ -160,11 +160,11 @@ OSimX 2.0 is developed by a dedicated team of Computer Science students at **Gra
 | **Srishti** | Database Developer |
 | **Yash Variyani** | Algorithms Developer |
 
-### 🎓 Project Mentor
+### Project Mentor
 
 We express our sincere gratitude to **Prof. Dr. Puneet Sharma** for his valuable guidance, encouragement, and continuous support throughout the development of OSimX.
 
-### 🏫 Institution
+### Institution
 
 **Graphic Era Deemed to be University**  
 Department of Computer Science & Engineering  
@@ -174,11 +174,11 @@ We also thank the faculty members of the Department of Computer Science & Engine
 
 ---
 
-## 📜 License
+## License
 
 OSimX is distributed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
-## 📬 Contact & Support
+## Contact & Support
 
 For questions, suggestions, or collaboration:
 
