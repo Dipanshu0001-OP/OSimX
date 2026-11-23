@@ -1,276 +1,198 @@
-# OSimX - Operating System Simulator
 
-[![C++](https://img.shields.io/badge/C++-17-blue.svg)](https://isocpp.org/)
-[![Qt](https://img.shields.io/badge/Qt-6.0-green.svg)](https://www.qt.io/)
-[![CMake](https://img.shields.io/badge/CMake-3.16-red.svg)](https://cmake.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-orange.svg)](https://www.mysql.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+# OSimX 2.0 — Operating System Simulator
 
----
+### Visualize. Simulate. Understand.
 
-## 📖 Table of Contents
+![C++](https://img.shields.io/badge/C++-17-00599C?style=flat-square&logo=cplusplus&logoColor=white)
+![Qt](https://img.shields.io/badge/Qt-6-41CD52?style=flat-square&logo=qt&logoColor=white)
+![CMake](https://img.shields.io/badge/CMake-3.16+-064F8C?style=flat-square&logo=cmake&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows-Desktop-0078D4?style=flat-square)
 
-- [About](#about)
-- [Modules](#modules)
-- [Screenshots](#screenshots)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Acknowledgement](#Acknowledgement)
-- [Mentor](#mentor)
-- [Institution](#institution)
-- [Team Members](#team-members)
-- [Tools and Technologies](#tools&technologies)
-- [Conclusion](#conclusion)
+**OSimX 2.0** is an interactive desktop application designed to simplify Operating System concepts through hands-on simulations, algorithm visualizations, and performance analysis.
+
+Built with **C++17 and Qt 6**, OSimX allows students to explore CPU Scheduling, Memory Management, Disk Scheduling, Deadlock Management, and File System operations in a unified learning environment.
+
+The application features a modern graphical interface, user authentication, database-backed simulation history, and interactive algorithm comparisons.
+
+Designed for **students, educators, and OS enthusiasts**, OSimX bridges the gap between theoretical knowledge and practical understanding.
 
 ---
 
-## 📌 About
+## ✨ Key Features
 
-**OSimX** is an interactive Operating System Simulator designed to help students understand core OS concepts through hands-on experimentation and visualization.
-
-### The Problem
-
-Operating Systems is one of the most challenging subjects in computer science because its concepts are abstract, algorithm-heavy, and difficult to visualize. Students often struggle to understand how CPU scheduling, memory management, disk operations, and file systems actually work beyond textbook diagrams. They memorize formulas and pass exams, but they never truly see these algorithms in action. Existing simulators are either too simplistic, too complex, or lack persistent storage, forcing students to re-enter data every time.
-
-### The Solution
-
-OSimX bridges this gap by providing an interactive, visual learning environment where students can experiment with OS concepts safely. What sets OSimX apart is its MySQL database integration, which enables persistent storage of simulation inputs, results, and experiment history — allowing students to track learning progress and compare algorithm performance over time.
-
-Built with C++17 on Linux using Qt6 for the graphical interface and MySQL for data persistence, OSimX bridges the gap between theoretical OS concepts and practical understanding through visualization and hands-on experimentation.
+- **Interactive OS Simulations** — Explore CPU Scheduling, Memory Management, Disk Scheduling, Deadlock Management, and File System operations.
+- **Algorithm Visualization** — Understand execution through Gantt charts, memory representations, and disk movement graphs.
+- **Performance Analysis** — Examine scheduling metrics, page faults, disk head movement, and simulation results.
+- **Modern Desktop Interface** — Clean, intuitive graphical interface built using Qt 6 Widgets.
+- **User Authentication** — Integrated login and signup with database-backed account management.
+- **Simulation History** — Save, retrieve, and restore previous experiments.
+- **Algorithm Comparison** — Compare simulation results to understand algorithm behavior and efficiency.
+- **Database Integration** — SQLite by default, with optional MySQL support.
+- **Automated Testing** — C++ regression tests for core simulation functionality.
 
 ---
 
-## 🧠 Modules
+## 🧠 Operating System Modules
 
-OSimX covers **10 core OS modules**, each implemented as an independent simulation engine with database persistence.
+OSimX 2.0 provides five interactive simulation modules covering essential Operating System concepts.
 
-### 1. User & Authentication Module
+| Module | Supported Algorithms / Features |
+|--------|--------------------------------|
+| **⚙️ CPU Scheduling** | FCFS, SJF, SRTF, Round Robin, Priority Scheduling |
+| **🧩 Memory Management** | First Fit, Best Fit, Worst Fit, FIFO, LRU, Optimal Page Replacement |
+| **💽 Disk Scheduling** | FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK |
+| **🔒 Deadlock Management** | Banker's Algorithm, Deadlock Detection, Resource Request Analysis |
+| **📁 File System** | File & Directory Operations, Permissions, Contiguous, Linked & Indexed Allocation |
 
-### 2. Process Management Module
-- Process creation (PID, arrival time, burst time, priority)
-- Process state visualization
-- Process Control Block (PCB) simulation
-- Parent-child relationships
+Each module allows users to configure simulation inputs, execute algorithms, visualize results, and explore fundamental OS concepts.
 
-### 3. CPU Scheduling Module ⭐
-- **FCFS** (First Come First Served) — Non-preemptive
-- **SJF** (Shortest Job First) — Non-preemptive
-- **SRTF** (Shortest Remaining Time First) — Preemptive
-- **Round Robin** — With configurable time quantum
-- **Priority Scheduling** — Preemptive
-
-**Metrics Calculated:**
-- Waiting Time
-- Turnaround Time
-- Response Time
-- CPU Utilization
-- Throughput
-
-**Visualization:**
-- Interactive Gantt Chart
+Supported simulations can also be saved and restored through the application's database-backed history system.
 
 ---
 
-### 4. Memory Management Module
+## 🛠️ Technology Stack
 
-**A. Memory Allocation Algorithms:**
-- First Fit
-- Best Fit
-- Worst Fit
+OSimX 2.0 is built using C++ and Qt, with a modular architecture for simulation, visualization, and data persistence.
 
-**B. Page Replacement Algorithms:**
-- FIFO (First In First Out)
-- LRU (Least Recently Used)
-- Optimal (Belady's Algorithm)
-
-**Visualization:**
-- Memory frames showing allocated/free blocks
-- Page fault tracking
-- Hit/miss ratio display
-
----
-
-### 5. File System Module
-- Directory tree with root (`/`)
-- File operations: create, delete, read, write, rename, move
-- Permission system (read/write/execute)
-- File metadata (size, timestamps)
-
-**Visualization:**
-- Directory tree view
-- File properties panel
-- Path navigation
+| Component | Technology |
+|-----------|------------|
+| **Programming Language** | C++17 |
+| **GUI Framework** | Qt 6 Widgets |
+| **Database** | SQLite (Default), MySQL (Optional) |
+| **Database Interface** | Qt SQL |
+| **Build System** | CMake 3.16+ |
+| **Compiler** | MinGW-w64 (Windows), GCC (Linux) |
+| **Build Tool** | Ninja |
+| **Testing** | CTest & C++ Regression Tests |
+| **Development Tools** | VS Code, Git & GitHub |
+| **Platform** | Windows Desktop, Linux Source Builds |
 
 ---
 
-### 6. Disk Scheduling Module
-- FCFS — First Come First Served
-- SSTF — Shortest Seek Time First
-- SCAN — Elevator algorithm
-- C-SCAN — Circular SCAN
-- LOOK — SCAN but only until last request
-- C-LOOK — Circular LOOK
+## 🚀 Installation & Setup
 
-**Metrics:**
-- Total head movement
-- Average seek time
+### Prerequisites
 
-**Visualization:**
-- Disk head movement graph
+To build OSimX 2.0 from source, ensure you have:
 
----
+- C++17-compatible compiler (MinGW-w64)
+- Qt 6 (Widgets and SQL modules)
+- CMake 3.16+
+- Ninja Build System
+- Git
 
-### 7. Deadlock Module
-- **Banker's Algorithm** — Deadlock avoidance
-- Resource Allocation Graph — Cycle detection
-- Wait-For Graph — Simplified deadlock detection
+### Clone the Repository
 
-**Visualization:**
-- Allocation matrices
-- Safe sequence display
-- Resource allocation graph
+```bash
+git clone https://github.com/Dipanshu0001-OP/OSimX.git
+cd OSimX
+```
 
----
+### Build and Run (Windows)
 
-### 8. IPC Module
-- Pipes — Unidirectional communication
-- Message Queues — Message passing
-- Shared Memory — Simulated memory sharing
+OSimX includes a Windows build script for automated compilation, testing, and execution.
 
-**Visualization:**
-- Data flow between processes
-- Message queues
+```powershell
+.\BUILD_AND_RUN_WINDOWS.bat
+```
 
----
+> **Note:** The script requires a compatible Qt 6 and MinGW installation. Configure `OSIMX_QT_ROOT` and `OSIMX_MINGW_ROOT` if your installation paths differ from the script defaults.
 
-### 9. Synchronization Module
-- Producer-Consumer — Bounded buffer
-- Reader-Writer — Shared resource access
-- Dining Philosophers — Resource contention
+### Manual Build
 
-**Synchronization Tools:**
-- Mutex — Mutual exclusion
-- Semaphore — Counting and binary
+Alternatively, use CMake and Ninja from a terminal configured with Qt 6 and a compatible C++ compiler:
 
-**Visualization:**
-- Race condition demonstration
-- Resource access visualization
+```powershell
+cmake -S . -B build -G Ninja
+cmake --build build
+.\build\osimx.exe
+```
+
+### Download Prebuilt Application
+
+A packaged Windows version will be available from [GitHub Releases](https://github.com/Dipanshu0001-OP/OSimX/releases) once published.
+
+The packaged application can be launched using `osimx.exe` without installing a C++ compiler or configuring a separate SQLite server.
+
+For database configuration details, see [DATABASE_SETUP.md](DATABASE_SETUP.md).
 
 ---
-
-### 10. History & Reports Module
-- Experiment history viewer
-- Algorithm comparison (side-by-side)
-- Performance analytics
-- Report generation
-
----
-
-## 📸 Screenshots
-
-###CPU Scheduling with Gantt Chart
-<img width="1197" height="823" alt="Schedulers" src="https://github.com/user-attachments/assets/16ab12b7-9eef-4819-b451-c91f312482f2" />
-
----
-
-## 🛠️ Tech Stack
-
-| Component| Technology | Purpose |
-|-----------|------------|---------|
-| **Language** | C++17 | Core logic and algorithms |
-| **UI Framework** | Qt6 | Graphical user interface |
-| **Database** | MySQL 8.0 | Persistent data storage |
-| **Build System** | CMake 3.16+ | Project build and compilation |
-| **Version Control** | Git & GitHub | Source code management |
-| **OS** | Linux (Fedora) | Development environment |
 
 ## 📁 Project Structure
-<img width="1231" height="1278" alt="image" src="https://github.com/user-attachments/assets/74b98caf-43f8-406d-943a-7d6fdbb602c9" />
 
+OSimX 2.0 follows a modular architecture that separates simulation algorithms, user interfaces, database services, and application logic.
 
-## Acknowledgments
-We would like to express our sincere gratitude to all those who contributed to the successful completion of OSimX.
-
----
-
-## 🙏 Project Mentor
-
-We extend our deepest gratitude to our project mentor (Prof.)Dr.Puneet Sharma for their invaluable guidance, continuous support, and constructive feedback throughout the development of this project. Their expertise in Operating Systems and Database Management Systems helped us navigate through complex concepts and implement them effectively.
-
----
-
-## 🏫 Institution
-
-We are grateful to **Graphic Era Deemed to be University** for providing us with the platform, resources, and environment to work on this project. The university's commitment to academic excellence and innovation has been instrumental in shaping our learning journey.
-
----
-
-## 📚 Faculty Members
-
-We would like to thank all the faculty members of the **Department of Computer Science & Engineering** for their encouragement and support. Special thanks to:
-
-- **Operating Systems Course Faculty (TCS-502)** - For building our foundation in OS concepts
-- **DBMS Course Faculty (TCS-503)** - For helping us understand database design and implementation
+```text
+OSimX/
+├── app/                  # Application initialization
+├── database/             # Authentication & data persistence
+├── models/               # Simulation data models
+├── modules/              # Operating System simulation engines
+│   ├── cpu_scheduling/
+│   ├── memory_management/
+│   ├── disk_scheduling/
+│   ├── deadlock/
+│   └── file_system/
+├── ui/                   # Qt graphical interfaces
+│   ├── authentication/
+│   ├── common/
+│   └── main/
+├── resources/            # Logos, icons & assets
+├── tests/                # Automated regression tests
+├── main.cpp              # Application entry point
+├── CMakeLists.txt         # Build configuration
+└── BUILD_AND_RUN_WINDOWS.bat
+```
 
 ---
 
-## 👥 Team Members
+## 👥 Team & Acknowledgments
 
-We, the members of Team Avengers, thank each other for the collaboration, hard work, and dedication throughout this project:
+### Team Monolith
 
-| # |       Name          | Roll No.  |            Role            |
-|---|---------------------|-----------|----------------------------|
-| 1 | **Dipanshu Tandon** | 240211490 | Team Lead & Core Developer |
-| 2 | **Saloni Sharma**   | 24022818  | UI & Backend Developer     |
-| 3 | **Srishti**         | 24022705  | Database Developer         |
-| 4 | **Yash Variyani**   | 240211343 | Algorithms Developer       |
+OSimX 2.0 is developed by a dedicated team of Computer Science students at **Graphic Era Deemed to be University**, combining expertise in Operating Systems, C++ development, database management, and user interface design.
 
+| Team Member | Role |
+|-------------|------|
+| **Dipanshu Tandon** | Team Lead & Core Developer |
+| **Saloni Sharma** | UI & Backend Developer |
+| **Srishti** | Database Developer |
+| **Yash Variyani** | Algorithms Developer |
 
-Working together on OSimX has been an enriching experience where we learned not just technical skills, but also teamwork, communication, and problem-solving.
----
+### 🎓 Project Mentor
 
+We express our sincere gratitude to **Prof. Dr. Puneet Sharma** for his valuable guidance, encouragement, and continuous support throughout the development of OSimX.
 
-## 💻 Tools and Technologies
+### 🏫 Institution
 
-We acknowledge the open-source tools and technologies that made OSimX possible:
+**Graphic Era Deemed to be University**  
+Department of Computer Science & Engineering  
+Academic Year: 2026–2027
 
-| Tool               | Purpose                        |
-|--------------------|--------------------------------|
-| **C++17**          | Core programming language      |
-| **Qt6**            | Graphical User Interface       |
-| **MySQL 8.0**      | Database management            |
-| **CMake 3.16+**    | Build system                   |
-| **Git**            | Version control                |
-| **GitHub**         | Code hosting and collaboration |
-| **Linux (Fedora)** | Development environment        |
-| **VS Code/VIM**    | Code editor                    |
+We also thank the faculty members of the Department of Computer Science & Engineering, particularly those associated with **Operating Systems (TCS-502)** and **DBMS (TCS-503)**, for providing the academic foundation and support that contributed to this project.
 
 ---
 
-## ⭐ Show Your Support
+## 📜 License
 
-If you found this project helpful, please consider giving it a star on GitHub! ⭐
-(https://github.com/Dipanshu0001-OP/osimx)
+OSimX is distributed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
----
+## 📬 Contact & Support
 
-## 📞 Contact
+For questions, suggestions, or collaboration:
 
-For any questions, feedback, or collaboration:
-
+- **Project Lead:** Dipanshu Tandon
 - **Email:** dipanshutandon123@gmail.com
 - **GitHub:** [Dipanshu0001-OP](https://github.com/Dipanshu0001-OP)
-- **Project Link:** https://github.com/Dipanshu0001-OP/osimx
+- **Repository:** [OSimX](https://github.com/Dipanshu0001-OP/OSimX)
+
+If you find OSimX helpful, consider giving the repository a ⭐!
 
 ---
 
-## 🎯 Conclusion
-
-OSimX is the result of collective effort, learning, and dedication. We hope this project serves as a useful educational tool for students learning Operating Systems. We are committed to continuously improving and expanding OSimX in the future.
-
----
-
-*Made with ❤️ by the Team Monolith*
-
-**Graphic Era Deemed to be University**
-**Academic Year: 2026-2027**
+<p align="center">
+  Made with ❤️ by <b>Team Monolith</b><br>
+  Graphic Era Deemed to be University<br>
+  Academic Year 2026–2027
+</p>
