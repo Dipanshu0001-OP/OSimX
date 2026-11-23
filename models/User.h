@@ -2,6 +2,7 @@
 #define OSIMX_USER_H
 
 #include <QString>
+#include <QDateTime>
 
 struct User {
     int id = -1;
@@ -9,6 +10,7 @@ struct User {
     QString username;
     QString email;
     QString passwordHash;
+    QDateTime createdAt;
 };
 
 #endif

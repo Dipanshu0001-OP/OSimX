@@ -13,6 +13,8 @@ struct DiskStep {
     std::vector<int> remaining;
     std::vector<int> visited;
     std::string reason;
+    bool servesRequest = true;
+    bool circularReturn = false;
 };
 
 struct DiskResult {
@@ -20,6 +22,8 @@ struct DiskResult {
     std::vector<int> sequence;
     std::vector<DiskStep> steps;
     int totalSeek = 0;
+    int returnDistance = 0;
+    int requestsServed = 0;
     double averageSeek = 0.0;
 };
 

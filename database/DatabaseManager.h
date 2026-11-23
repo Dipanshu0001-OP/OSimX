@@ -2,6 +2,8 @@
 #define OSIMX_DATABASE_MANAGER_H
 
 #include <QSqlDatabase>
+#include <QString>
+#include <QStringList>
 
 class DatabaseManager {
 public:
@@ -10,6 +12,8 @@ public:
     bool open();
     void close();
     bool isOpen() const;
+    bool usingSqlite() const;
+    QString backendDescription() const;
     QSqlDatabase database() const;
 
 private:
@@ -17,7 +21,15 @@ private:
     DatabaseManager(const DatabaseManager&) = delete;
     DatabaseManager& operator=(const DatabaseManager&) = delete;
 
+    bool openMySql();
+    bool openSqlite();
+    bool ensureSchema();
+    bool execStatements(const QStringList& statements);
+    bool migrateIfNeeded();
+
     QSqlDatabase m_db;
+    bool m_sqlite = false;
+    QString m_description;
 };
 
 #endif

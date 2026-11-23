@@ -2,8 +2,15 @@
 #define OSIMX_AUTH_SERVICE_H
 
 #include "models/User.h"
+#include <QDateTime>
+#include <QList>
 #include <QString>
 #include <optional>
+
+struct LoginRecord {
+    int id = -1;
+    QDateTime loggedInAt;
+};
 
 class AuthService {
 public:
@@ -23,6 +30,8 @@ public:
     bool isLoggedIn() const;
     std::optional<User> currentUser() const;
 
+    QList<LoginRecord> loginHistory(QString& errorMessage) const;
+
 private:
     AuthService() = default;
     AuthService(const AuthService&) = delete;
@@ -37,6 +46,7 @@ private:
     bool verifyPassword(const QString& password, const QString& stored) const;
     bool usernameExists(const QString& username) const;
     bool emailExists(const QString& email) const;
+    void recordLogin(int userId);
 };
 
 #endif
