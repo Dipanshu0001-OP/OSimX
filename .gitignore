@@ -3,3 +3,5 @@ build/
 *.pro.user
 .vscode/
 .idea/
+
+build-tests/
