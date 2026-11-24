@@ -1,5 +1,3 @@
-[README.md](https://github.com/user-attachments/files/35330460/README.md)
-
 # OSimX — Operating System Simulator
 
 ### Visualize. Simulate. Understand.
