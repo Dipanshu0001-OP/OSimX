@@ -6,13 +6,18 @@
 #include <functional>
 
 class QLabel;
+class QTableWidget;
 class SchedulingWindow;
 class DiskSchedulingWindow;
+class MemoryWindow;
+class FileSystemWindow;
+class DeadlockWindow;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = nullptr);
+    void refreshSession();
 
 signals:
     void logoutRequested();
@@ -22,6 +27,15 @@ private:
     QWidget* hubPage = nullptr;
     SchedulingWindow* cpuPage = nullptr;
     DiskSchedulingWindow* diskPage = nullptr;
+    MemoryWindow* memoryPage = nullptr;
+    FileSystemWindow* fileSystemPage = nullptr;
+    DeadlockWindow* deadlockPage = nullptr;
+    QTableWidget* historyTable = nullptr;
+    QLabel* historyStatus = nullptr;
+    QTableWidget* comparisonTable = nullptr;
+    QLabel* comparisonStatus = nullptr;
+    QTableWidget* loginTable = nullptr;
+    QLabel* loginStatus = nullptr;
 
     QWidget* createHubPage();
     QWidget* createSimulationCard(const QString& icon,
@@ -31,6 +45,13 @@ private:
                                   bool enabled,
                                   const std::function<void()>& onClicked);
     void showHub();
+    void reloadHistory();
+    void reloadComparisons();
+    void reloadLoginHistory();
+    void viewSelectedSimulation();
+    void removeSelectedSimulation();
+    void viewSelectedComparison();
+    void removeSelectedComparison();
 };
 
 #endif

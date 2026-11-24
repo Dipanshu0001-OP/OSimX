@@ -1,4 +1,3 @@
-
 #ifndef OSIMX_APPLICATION_H
 #define OSIMX_APPLICATION_H
 
