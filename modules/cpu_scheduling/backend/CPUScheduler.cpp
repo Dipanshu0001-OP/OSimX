@@ -1,10 +1,28 @@
 #include "CPUScheduler.h"
 #include <algorithm>
 
+void CPUScheduler::normalize(std::vector<Process>& processes)
+{
+    for (auto& p : processes) {
+        p.arrivalTime = std::max(0, p.arrivalTime);
+        p.burstTime = std::max(1, p.burstTime);
+        p.remainingTime = p.burstTime;
+        p.startTime = -1;
+        p.completionTime = 0;
+        p.waitingTime = 0;
+        p.turnaroundTime = 0;
+        p.responseTime = 0;
+    }
+}
+
 void CPUScheduler::calculateValues(SchedulingResult& result)
 {
     if (result.processes.empty()) {
-        result = SchedulingResult();
+        result.avgWaitingTime = 0.0;
+        result.avgTurnaroundTime = 0.0;
+        result.avgResponseTime = 0.0;
+        result.cpuUtilization = 0.0;
+        result.throughput = 0.0;
         return;
     }
 
@@ -15,13 +33,15 @@ void CPUScheduler::calculateValues(SchedulingResult& result)
     int busy = 0;
 
     for (auto& process : result.processes) {
-        if (process.completionTime > 0) {
+        if (process.startTime >= 0) {
             process.turnaroundTime = process.completionTime - process.arrivalTime;
             process.waitingTime = std::max(0, process.turnaroundTime - process.burstTime);
+            process.responseTime = std::max(0, process.startTime - process.arrivalTime);
+        } else {
+            process.turnaroundTime = 0;
+            process.waitingTime = 0;
+            process.responseTime = 0;
         }
-        process.responseTime = process.startTime >= 0
-            ? std::max(0, process.startTime - process.arrivalTime)
-            : 0;
 
         totalWaiting += process.waitingTime;
         totalTurnaround += process.turnaroundTime;

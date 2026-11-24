@@ -3,6 +3,7 @@
 
 SchedulingResult FCFS::schedule(std::vector<Process> processes)
 {
+    normalize(processes);
     std::stable_sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
         if (a.arrivalTime != b.arrivalTime) return a.arrivalTime < b.arrivalTime;
         return a.id < b.id;

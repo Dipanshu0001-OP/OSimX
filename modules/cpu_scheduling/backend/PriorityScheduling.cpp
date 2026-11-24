@@ -4,6 +4,7 @@
 
 SchedulingResult PriorityScheduling::schedule(std::vector<Process> processes)
 {
+    normalize(processes);
     SchedulingResult result;
     result.processes = processes;
     for (auto& p : result.processes) {
@@ -21,10 +22,19 @@ SchedulingResult PriorityScheduling::schedule(std::vector<Process> processes)
         for (int i = 0; i < n; ++i) {
             const auto& p = result.processes[i];
             if (p.remainingTime <= 0 || p.arrivalTime > currentTime) continue;
-            if (selected == -1 ||
-                p.priority < result.processes[selected].priority ||
-                (p.priority == result.processes[selected].priority && p.id < result.processes[selected].id)) {
+            if (selected == -1) {
                 selected = i;
+            } else {
+                const auto& current = result.processes[selected];
+                const bool pIsRunning = p.id == previousPid;
+                const bool currentIsRunning = current.id == previousPid;
+                if (p.priority < current.priority ||
+                    (p.priority == current.priority && pIsRunning && !currentIsRunning) ||
+                    (p.priority == current.priority && pIsRunning == currentIsRunning &&
+                     (p.arrivalTime < current.arrivalTime ||
+                      (p.arrivalTime == current.arrivalTime && p.id < current.id)))) {
+                    selected = i;
+                }
             }
         }
 

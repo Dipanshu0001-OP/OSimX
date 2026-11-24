@@ -12,6 +12,7 @@ public:
     virtual std::string getAlgorithmName() const = 0;
 
 protected:
+    static void normalize(std::vector<Process>& processes);
     void calculateValues(SchedulingResult& result);
 };
 

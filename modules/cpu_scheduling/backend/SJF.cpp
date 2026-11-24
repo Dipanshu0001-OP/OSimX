@@ -4,6 +4,7 @@
 
 SchedulingResult SJF::schedule(std::vector<Process> processes)
 {
+    normalize(processes);
     SchedulingResult result;
     result.processes = processes;
     const int n = static_cast<int>(result.processes.size());
@@ -18,7 +19,9 @@ SchedulingResult SJF::schedule(std::vector<Process> processes)
             if (done[i] || p.arrivalTime > currentTime) continue;
             if (selected == -1 ||
                 p.burstTime < result.processes[selected].burstTime ||
-                (p.burstTime == result.processes[selected].burstTime && p.id < result.processes[selected].id)) {
+                (p.burstTime == result.processes[selected].burstTime &&
+                 (p.arrivalTime < result.processes[selected].arrivalTime ||
+                  (p.arrivalTime == result.processes[selected].arrivalTime && p.id < result.processes[selected].id)))) {
                 selected = i;
             }
         }

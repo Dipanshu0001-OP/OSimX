@@ -6,6 +6,7 @@ RoundRobin::RoundRobin(int quantum) : timeQuantum(std::max(1, quantum)) {}
 
 SchedulingResult RoundRobin::schedule(std::vector<Process> processes)
 {
+    normalize(processes);
     SchedulingResult result;
     result.processes = processes;
     std::stable_sort(result.processes.begin(), result.processes.end(), [](const Process& a, const Process& b) {
