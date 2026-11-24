@@ -8,7 +8,7 @@
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
 - [About](#about)
 - [Modules](#modules)
@@ -24,7 +24,7 @@
 
 ---
 
-## 📌 About
+## About
 
 **OSimX** is an interactive Operating System Simulator designed to help students understand core OS concepts through hands-on experimentation and visualization.
 
@@ -40,7 +40,7 @@ Built with C++17 on Linux using Qt6 for the graphical interface and MySQL for da
 
 ---
 
-## 🧠 Modules
+## Modules
 
 OSimX covers **10 core OS modules**, each implemented as an independent simulation engine with database persistence.
 
@@ -52,7 +52,7 @@ OSimX covers **10 core OS modules**, each implemented as an independent simulati
 - Process Control Block (PCB) simulation
 - Parent-child relationships
 
-### 3. CPU Scheduling Module ⭐
+### 3. CPU Scheduling Module 
 - **FCFS** (First Come First Served) — Non-preemptive
 - **SJF** (Shortest Job First) — Non-preemptive
 - **SRTF** (Shortest Remaining Time First) — Preemptive
@@ -166,14 +166,14 @@ OSimX covers **10 core OS modules**, each implemented as an independent simulati
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 ###CPU Scheduling with Gantt Chart
 <img width="1197" height="823" alt="Schedulers" src="https://github.com/user-attachments/assets/16ab12b7-9eef-4819-b451-c91f312482f2" />
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component| Technology | Purpose |
 |-----------|------------|---------|
@@ -184,7 +184,7 @@ OSimX covers **10 core OS modules**, each implemented as an independent simulati
 | **Version Control** | Git & GitHub | Source code management |
 | **OS** | Linux (Fedora) | Development environment |
 
-## 📁 Project Structure
+## Project Structure
 <img width="1231" height="1278" alt="image" src="https://github.com/user-attachments/assets/74b98caf-43f8-406d-943a-7d6fdbb602c9" />
 
 
@@ -193,19 +193,19 @@ We would like to express our sincere gratitude to all those who contributed to t
 
 ---
 
-## 🙏 Project Mentor
+## Project Mentor
 
 We extend our deepest gratitude to our project mentor (Prof.)Dr.Puneet Sharma for their invaluable guidance, continuous support, and constructive feedback throughout the development of this project. Their expertise in Operating Systems and Database Management Systems helped us navigate through complex concepts and implement them effectively.
 
 ---
 
-## 🏫 Institution
+## Institution
 
 We are grateful to **Graphic Era Deemed to be University** for providing us with the platform, resources, and environment to work on this project. The university's commitment to academic excellence and innovation has been instrumental in shaping our learning journey.
 
 ---
 
-## 📚 Faculty Members
+## Faculty Members
 
 We would like to thank all the faculty members of the **Department of Computer Science & Engineering** for their encouragement and support. Special thanks to:
 
@@ -214,7 +214,7 @@ We would like to thank all the faculty members of the **Department of Computer S
 
 ---
 
-## 👥 Team Members
+## Team Members
 
 We, the members of Team Avengers, thank each other for the collaboration, hard work, and dedication throughout this project:
 
@@ -230,7 +230,7 @@ Working together on OSimX has been an enriching experience where we learned not 
 ---
 
 
-## 💻 Tools and Technologies
+## Tools and Technologies
 
 We acknowledge the open-source tools and technologies that made OSimX possible:
 
@@ -247,14 +247,14 @@ We acknowledge the open-source tools and technologies that made OSimX possible:
 
 ---
 
-## ⭐ Show Your Support
+## Show Your Support
 
 If you found this project helpful, please consider giving it a star on GitHub! ⭐
 (https://github.com/Dipanshu0001-OP/osimx)
 
 ---
 
-## 📞 Contact
+## Contact
 
 For any questions, feedback, or collaboration:
 
@@ -264,7 +264,7 @@ For any questions, feedback, or collaboration:
 
 ---
 
-## 🎯 Conclusion
+## Conclusion
 
 OSimX is the result of collective effort, learning, and dedication. We hope this project serves as a useful educational tool for students learning Operating Systems. We are committed to continuously improving and expanding OSimX in the future.
 
