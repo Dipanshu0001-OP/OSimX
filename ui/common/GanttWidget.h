@@ -9,7 +9,7 @@ class GanttWidget : public QWidget {
     Q_OBJECT
 public:
     explicit GanttWidget(QWidget* parent = nullptr);
-    void setGanttData(const std::vector<GanttChart>& data);
+    void setGanttData(const std::vector<GanttChart>& segments);
     void clear();
     void setCurrentStep(int step);
 

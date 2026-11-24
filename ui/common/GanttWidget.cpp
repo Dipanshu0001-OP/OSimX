@@ -11,9 +11,9 @@ GanttWidget::GanttWidget(QWidget* parent) : QWidget(parent)
     setMinimumWidth(900);
 }
 
-void GanttWidget::setGanttData(const std::vector<GanttChart>& data)
+void GanttWidget::setGanttData(const std::vector<GanttChart>& segments)
 {
-    ganttData = data;
+    ganttData = segments;
     currentStep = ganttData.empty() ? -1 : 0;
 
     int total = 0;
