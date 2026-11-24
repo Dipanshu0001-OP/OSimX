@@ -1,4 +1,5 @@
 #include "DiskSchedulingWindow.h"
+#include "database/SimulationRepository.h"
 #include "modules/disk_scheduling/backend/DiskScheduler.h"
 #include <QAbstractItemView>
 #include <QFrame>
@@ -16,6 +17,8 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <initializer_list>
+#include <utility>
 #include <functional>
 
 DiskSchedulingWindow::DiskSchedulingWindow(QWidget* parent) : QWidget(parent)
@@ -293,15 +296,20 @@ void DiskSchedulingWindow::runSimulation()
         return;
     }
 
+    lastRunHead = head;
+    lastRunMaxCylinder = maxCylinder;
+    lastRunDirection = directionCombo->currentText();
+    lastRunRequests = requests;
     result = DiskScheduler::schedule(algorithmCombo->currentText().toStdString(), head, requests,
                                      maxCylinder, directionCombo->currentIndex() == 0);
     track->setResult(result, maxCylinder, head, requests);
     playback->setTotal(static_cast<int>(result.steps.size()));
     resultLogs = buildLogs();
     logs->setLogs(resultLogs);
-    metricsLabel->setText(QString("Total seek %1   •   Average seek %2 cylinders")
+    metricsLabel->setText(QString("Total seek %1   •   Average seek %2 cylinders   •   Circular return %3")
                               .arg(result.totalSeek)
-                              .arg(result.averageSeek, 0, 'f', 2));
+                              .arg(result.averageSeek, 0, 'f', 2)
+                              .arg(result.returnDistance));
     updateView(0);
     saveButton->setEnabled(true);
     playback->startPlayback();
@@ -328,42 +336,20 @@ QStringList DiskSchedulingWindow::buildLogs() const
 
 void DiskSchedulingWindow::saveSimulation()
 {
-    if (result.steps.empty())
+    if (result.steps.empty()) {
+        QMessageBox::information(this, "Nothing to save", "Run a disk scheduling simulation first.");
         return;
-
-    const QString algorithm = algorithmCombo->currentText();
-    QString fileAlgorithm = algorithm;
-    fileAlgorithm.replace(' ', '_');
-    const QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
-    const QString defaultName = QString("OSimX_%1_%2.osimx.json")
-                                    .arg(fileAlgorithm)
-                                    .arg(timestamp);
-
-    const QString path = QFileDialog::getSaveFileName(
-        this,
-        "Save Simulation",
-        defaultName,
-        "OSimX Simulation (*.osimx.json);;JSON Files (*.json)"
-    );
-
-    if (path.isEmpty())
-        return;
-
+    }
+    const QString algorithm = QString::fromStdString(result.algorithm);
     QJsonObject root;
     root["application"] = "OSimX";
     root["module"] = "Disk Scheduling";
     root["algorithm"] = algorithm;
-    root["initialHead"] = headSpinBox->value();
-    root["maxCylinder"] = maxCylinderSpinBox->value();
-    root["direction"] = directionCombo->currentText();
+    root["initialHead"] = lastRunHead;
+    root["maxCylinder"] = lastRunMaxCylinder;
+    root["direction"] = lastRunDirection;
     root["savedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-
     QJsonArray requests;
-    for (const int request : result.sequence)
-        requests.append(request);
-    root["sequence"] = requests;
-
-    QJsonArray steps;
     for (const auto& step : result.steps) {
         QJsonObject item;
         item["index"] = step.index;
@@ -372,32 +358,43 @@ void DiskSchedulingWindow::saveSimulation()
         item["distance"] = step.distance;
         item["cumulative"] = step.cumulative;
         item["reason"] = QString::fromStdString(step.reason);
+        item["servesRequest"] = step.servesRequest;
+        item["circularReturn"] = step.circularReturn;
         QJsonArray remaining;
-        for (const int cylinder : step.remaining)
-            remaining.append(cylinder);
+        for (int cylinder : step.remaining) remaining.append(cylinder);
         item["remaining"] = remaining;
-        steps.append(item);
+        QJsonArray visited;
+        for (int cylinder : step.visited) visited.append(cylinder);
+        item["visited"] = visited;
+        requests.append(item);
     }
-    root["steps"] = steps;
+    root["steps"] = requests;
+    QJsonArray originalRequests;
+    for (int request : lastRunRequests)
+        originalRequests.append(request);
+    root["requestQueue"] = originalRequests;
+    QJsonArray sequence;
+    for (int cylinder : result.sequence) sequence.append(cylinder);
+    root["sequence"] = sequence;
+    root["returnDistance"] = result.returnDistance;
+    root["requestsServed"] = result.requestsServed;
     root["totalSeek"] = result.totalSeek;
     root["averageSeek"] = result.averageSeek;
-
     QJsonArray decisionLog;
-    for (const auto& entry : resultLogs)
-        decisionLog.append(entry);
+    for (const auto& entry : resultLogs) decisionLog.append(entry);
     root["decisionLog"] = decisionLog;
 
-    QFile file(path);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QMessageBox::warning(this, "Save failed", "OSimX could not write the simulation file.");
+    QString error;
+    if (!SimulationRepository::instance().save("Disk Scheduling", algorithm,
+            QString("seek %1 · avg %2").arg(result.totalSeek).arg(result.averageSeek, 0, 'f', 2), root, error)) {
+        QMessageBox::warning(this, "Save failed", error);
         return;
     }
-
-    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
-    file.close();
-
-    statusLabel->setText(QString("Simulation saved to %1").arg(path));
+    statusLabel->setText("Simulation saved to your profile.");
+    emit simulationSaved();
+    QMessageBox::information(this, "Simulation saved", "This run is saved in your OSimX profile on the home screen.");
 }
+
 
 void DiskSchedulingWindow::onPlaybackIndex(int index)
 {
@@ -424,4 +421,103 @@ void DiskSchedulingWindow::updateView(int index)
                              .arg(step.to)
                              .arg(step.distance)
                              .arg(QString::fromStdString(step.reason)));
+}
+
+
+bool DiskSchedulingWindow::restoreSimulation(const QJsonObject& saved)
+{
+    const QString algorithm = saved.value("algorithm").toString();
+    const int algorithmIndex = algorithmCombo->findText(algorithm);
+    const int maxCylinder = saved.value("maxCylinder").toInt(-1);
+    const int head = saved.value("initialHead").toInt(-1);
+    const int directionIndex = directionCombo->findText(saved.value("direction").toString());
+    if (algorithmIndex < 0 || directionIndex < 0 || maxCylinder < 1 ||
+        maxCylinder > maxCylinderSpinBox->maximum() || head < 0 || head > maxCylinder ||
+        !saved.value("steps").isArray() || !saved.value("sequence").isArray() ||
+        !saved.value("totalSeek").isDouble() || !saved.value("averageSeek").isDouble())
+        return false;
+
+    DiskResult restored;
+    restored.algorithm = algorithm.toStdString();
+    const QJsonArray steps = saved.value("steps").toArray();
+    const QJsonArray sequence = saved.value("sequence").toArray();
+    if (steps.isEmpty() || steps.size() > 100000 || sequence.size() > 100000)
+        return false;
+
+    auto parseInts = [](const QJsonValue& value, std::vector<int>& output) {
+        if (!value.isArray()) return false;
+        for (const auto& element : value.toArray()) {
+            if (!element.isDouble()) return false;
+            output.push_back(element.toInt());
+        }
+        return true;
+    };
+    if (!parseInts(saved.value("sequence"), restored.sequence)) return false;
+    std::vector<int> requests;
+    if (saved.value("requestQueue").isArray() &&
+        !parseInts(saved.value("requestQueue"), requests)) return false;
+
+    for (const auto& value : steps) {
+        if (!value.isObject()) return false;
+        const QJsonObject item = value.toObject();
+        for (const char* key : {"index", "from", "to", "distance", "cumulative"})
+            if (!item.value(QLatin1String(key)).isDouble()) return false;
+        DiskStep step;
+        step.index = item.value("index").toInt();
+        step.from = item.value("from").toInt();
+        step.to = item.value("to").toInt();
+        step.distance = item.value("distance").toInt();
+        step.cumulative = item.value("cumulative").toInt();
+        step.reason = item.value("reason").toString().toStdString();
+        step.servesRequest = item.value("servesRequest").toBool(true);
+        step.circularReturn = item.value("circularReturn").toBool(false);
+        if (step.from < 0 || step.from > maxCylinder || step.to < 0 ||
+            step.to > maxCylinder || step.distance < 0) return false;
+        if (!parseInts(item.value("remaining"), step.remaining) ||
+            !parseInts(item.value("visited"), step.visited)) return false;
+        if (!saved.value("requestQueue").isArray() && step.servesRequest)
+            requests.push_back(step.to); // Compatibility with older saved runs.
+        restored.steps.push_back(std::move(step));
+    }
+    for (int request : requests)
+        if (request < 0 || request > maxCylinder) return false;
+
+    restored.totalSeek = saved.value("totalSeek").toInt();
+    restored.averageSeek = saved.value("averageSeek").toDouble();
+    restored.requestsServed = saved.contains("requestsServed")
+        ? saved.value("requestsServed").toInt()
+        : static_cast<int>(requests.size());
+    restored.returnDistance = saved.value("returnDistance").toInt();
+    if (!saved.contains("returnDistance"))
+        for (const auto& step : restored.steps)
+            if (step.circularReturn) restored.returnDistance += step.distance;
+    QStringList restoredLogs;
+    if (saved.value("decisionLog").isArray()) {
+        for (const auto& value : saved.value("decisionLog").toArray()) {
+            if (!value.isString()) return false;
+            restoredLogs << value.toString();
+        }
+    }
+
+    maxCylinderSpinBox->setValue(maxCylinder);
+    headSpinBox->setValue(head);
+    algorithmCombo->setCurrentIndex(algorithmIndex);
+    directionCombo->setCurrentIndex(directionIndex);
+    requestsTable->setRowCount(static_cast<int>(requests.size()));
+    for (int i = 0; i < requestsTable->rowCount(); ++i)
+        requestsTable->setItem(i, 0, new QTableWidgetItem(QString::number(requests[static_cast<std::size_t>(i)])));
+    result = std::move(restored);
+    lastRunHead = head;
+    lastRunMaxCylinder = maxCylinder;
+    lastRunDirection = directionCombo->currentText();
+    lastRunRequests = requests;
+    resultLogs = restoredLogs.isEmpty() ? buildLogs() : restoredLogs;
+    track->setResult(result, maxCylinder, head, requests);
+    playback->setTotal(static_cast<int>(result.steps.size()));
+    logs->setLogs(resultLogs);
+    metricsLabel->setText(QString("Total seek %1   •   Average seek %2 cylinders   •   Circular return %3")
+        .arg(result.totalSeek).arg(result.averageSeek, 0, 'f', 2).arg(result.returnDistance));
+    updateView(0);
+    saveButton->setEnabled(true);
+    return true;
 }

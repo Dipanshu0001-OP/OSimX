@@ -9,6 +9,7 @@
 #include <QSpinBox>
 #include <QTableWidget>
 #include <QWidget>
+#include <QJsonObject>
 #include "models/MemoryResult.h"
 #include "ui/common/PlaybackBar.h"
 #include "ui/common/SimulationLogWidget.h"
@@ -20,13 +21,17 @@
 // Page Replacement (FIFO/LRU/Optimal). Each tab follows the same
 // input -> run -> replayable visualization -> log -> results -> save
 // pattern as SchedulingWindow and DiskSchedulingWindow.
+class QTabWidget;
+
 class MemoryWindow : public QWidget {
     Q_OBJECT
 public:
     explicit MemoryWindow(QWidget* parent = nullptr);
+    bool restoreSimulation(const QJsonObject& saved);
 
 signals:
     void backRequested();
+    void simulationSaved();
 
 private slots:
     // allocation tab
@@ -45,6 +50,8 @@ private slots:
     void savePageSimulation();
 
 private:
+    QTabWidget* tabs = nullptr;
+
     // ----- allocation tab widgets -----
     QTableWidget* processTable = nullptr;
     QPushButton* addProcessButton = nullptr;

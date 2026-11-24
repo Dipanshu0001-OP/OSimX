@@ -8,6 +8,7 @@
 #include <QScrollArea>
 #include <QSpinBox>
 #include <QWidget>
+#include <QJsonObject>
 #include "models/SchedulingResult.h"
 #include "ui/common/GanttWidget.h"
 #include "ui/common/PlaybackBar.h"
@@ -17,9 +18,11 @@ class SchedulingWindow : public QWidget {
     Q_OBJECT
 public:
     explicit SchedulingWindow(QWidget* parent = nullptr);
+    bool restoreSimulation(const QJsonObject& saved);
 
 signals:
     void backRequested();
+    void simulationSaved();
 
 private slots:
     void addProcess();
@@ -29,6 +32,7 @@ private slots:
     void onAlgorithmChanged(const QString& algorithm);
     void onPlaybackIndex(int index);
     void saveSimulation();
+    void compareAlgorithms();
 
 private:
     QTableWidget* processTable = nullptr;
@@ -47,7 +51,11 @@ private:
     SimulationLogWidget* logs = nullptr;
     QTableWidget* resultsTable = nullptr;
     QPushButton* saveButton = nullptr;
+    QTableWidget* comparisonTable = nullptr;
+    QLabel* comparisonInsight = nullptr;
 
+    QString lastRunAlgorithm;
+    int lastRunQuantum = 1;
     SchedulingResult result;
     QStringList resultLogs;
 
@@ -59,6 +67,7 @@ private:
     void populateResultTable();
     QStringList buildLogs() const;
     QString algorithmKey() const;
+    bool readProcesses(std::vector<Process>& processes);
 };
 
 #endif

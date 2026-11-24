@@ -1,4 +1,5 @@
 #include "SchedulingWindow.h"
+#include "database/SimulationRepository.h"
 #include "modules/cpu_scheduling/backend/FCFS.h"
 #include "modules/cpu_scheduling/backend/SJF.h"
 #include "modules/cpu_scheduling/backend/SRTF.h"
@@ -21,8 +22,13 @@
 #include <QVBoxLayout>
 #include <memory>
 #include <functional>
+#include <QSet>
 #include <QStringList>
 #include <algorithm>
+#include <initializer_list>
+#include <utility>
+#include <limits>
+#include <cmath>
 
 namespace {
 QLabel* makeCaption(const QString& text)
@@ -147,6 +153,46 @@ void SchedulingWindow::setupUI()
     splitter->setStretchFactor(1, 2);
     splitter->setSizes({680, 420});
     main->addWidget(splitter);
+    auto* beginnerGuide = new QGroupBox("Start here · CPU scheduling explained");
+    auto* guideLayout = new QVBoxLayout(beginnerGuide);
+    auto* guide = new QLabel(
+        "<b>What are we simulating?</b> Several programs need one CPU. The scheduler decides who runs next.<br>"
+        "<b>Arrival:</b> when a process enters the queue.  "
+        "<b>Burst:</b> how long it needs the CPU.  "
+        "<b>Priority:</b> lower number means higher importance in this simulator.<br>"
+        "<b>Try it:</b> edit the sample processes, choose an algorithm, then press Run Simulation. "
+        "Watch the Gantt timeline and use the playback buttons to follow each decision.");
+    guide->setWordWrap(true);
+    guide->setTextFormat(Qt::RichText);
+    guideLayout->addWidget(guide);
+    main->addWidget(beginnerGuide);
+
+
+    auto* comparisonBox = new QGroupBox("Compare all algorithms · same processes, different decisions");
+    auto* comparisonLayout = new QVBoxLayout(comparisonBox);
+    auto* comparisonIntro = new QLabel("Compare FCFS, SJF, SRTF, Round Robin and preemptive Priority on identical inputs. Lower waiting, turnaround and response times are generally desirable; higher CPU utilization and throughput are generally desirable.");
+    comparisonIntro->setWordWrap(true);
+    comparisonLayout->addWidget(comparisonIntro);
+    auto* compareButton = new QPushButton("Compare All 5 Algorithms");
+    compareButton->setObjectName("primaryButton");
+    comparisonLayout->addWidget(compareButton);
+    comparisonTable = new QTableWidget;
+    comparisonTable->setColumnCount(6);
+    comparisonTable->setHorizontalHeaderLabels({"Algorithm", "Avg waiting", "Avg turnaround", "Avg response", "CPU use %", "Throughput"});
+    comparisonTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    comparisonTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    comparisonTable->verticalHeader()->setVisible(false);
+    comparisonTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    comparisonTable->setMinimumHeight(200);
+    comparisonLayout->addWidget(comparisonTable);
+    comparisonInsight = new QLabel("Enter processes and click Compare All 5 Algorithms to discover how each policy changes the outcome.");
+    comparisonInsight->setWordWrap(true);
+    comparisonLayout->addWidget(comparisonInsight);
+    auto* metricGuide = new QLabel("<b>Reading the numbers:</b> Waiting = time spent in the ready queue. Turnaround = completion − arrival. Response = first CPU start − arrival. CPU use = busy time / total elapsed time. Throughput = completed processes per time unit. These averages do not measure fairness or starvation.");
+    metricGuide->setWordWrap(true);
+    comparisonLayout->addWidget(metricGuide);
+    main->addWidget(comparisonBox);
+    connect(compareButton, &QPushButton::clicked, this, &SchedulingWindow::compareAlgorithms);
 
     auto* timelineBox = new QGroupBox("Interactive timeline");
     auto* timelineLayout = new QVBoxLayout(timelineBox);
@@ -306,11 +352,12 @@ QString SchedulingWindow::algorithmKey() const
     return algorithmCombo->currentText();
 }
 
-void SchedulingWindow::runSimulation()
+bool SchedulingWindow::readProcesses(std::vector<Process>& processes)
 {
-    std::vector<Process> processes;
+    processes.clear();
     processes.reserve(processTable->rowCount());
 
+    QSet<int> seenIds;
     for (int row = 0; row < processTable->rowCount(); ++row) {
         auto textAt = [&](int column) { return processTable->item(row, column) ? processTable->item(row, column)->text().trimmed() : QString(); };
         QString pidText = textAt(0);
@@ -324,15 +371,28 @@ void SchedulingWindow::runSimulation()
 
         if (!okId || !okArrival || !okBurst || !okPriority || id <= 0 || arrival < 0 || burst <= 0 || priority < 0) {
             QMessageBox::warning(this, "Invalid process", "Every row needs a positive PID, a non-negative arrival time, a positive burst time, and a non-negative priority.");
-            return;
+            return false;
         }
+        if (seenIds.contains(id)) {
+            QMessageBox::warning(this, "Duplicate process", QString("PID %1 is listed more than once. Each process needs its own id.").arg(id));
+            return false;
+        }
+        seenIds.insert(id);
         processes.emplace_back(id, arrival, burst, priority);
     }
 
     if (processes.empty()) {
         QMessageBox::warning(this, "No processes", "Add at least one process before running the simulation.");
-        return;
+        return false;
     }
+
+    return true;
+}
+
+void SchedulingWindow::runSimulation()
+{
+    std::vector<Process> processes;
+    if (!readProcesses(processes)) return;
 
     std::unique_ptr<CPUScheduler> scheduler;
     const QString algorithm = algorithmKey();
@@ -343,6 +403,8 @@ void SchedulingWindow::runSimulation()
     else scheduler = std::make_unique<PriorityScheduling>();
 
     result = scheduler->schedule(processes);
+    lastRunAlgorithm = algorithm;
+    lastRunQuantum = quantumSpinBox->value();
     ganttWidget->setGanttData(result.ganttChart);
     playback->setTotal(static_cast<int>(result.ganttChart.size()));
     resultLogs = buildLogs();
@@ -352,6 +414,45 @@ void SchedulingWindow::runSimulation()
     updatePlaybackState(0);
     saveButton->setEnabled(true);
     playback->startPlayback();
+}
+
+void SchedulingWindow::compareAlgorithms()
+{
+    std::vector<Process> processes;
+    if (!readProcesses(processes)) return;
+
+    const QStringList names = {"FCFS", "SJF", "SRTF", "Round Robin", "Priority"};
+    comparisonTable->setRowCount(names.size());
+    double bestWait = std::numeric_limits<double>::infinity();
+    QStringList winners;
+    for (int i = 0; i < names.size(); ++i) {
+        const QString& name = names.at(i);
+        std::unique_ptr<CPUScheduler> scheduler;
+        if (name == "FCFS") scheduler = std::make_unique<FCFS>();
+        else if (name == "SJF") scheduler = std::make_unique<SJF>();
+        else if (name == "SRTF") scheduler = std::make_unique<SRTF>();
+        else if (name == "Round Robin") scheduler = std::make_unique<RoundRobin>(quantumSpinBox->value());
+        else scheduler = std::make_unique<PriorityScheduling>();
+        const SchedulingResult r = scheduler->schedule(processes);
+        const QStringList values = {name, niceNumber(r.avgWaitingTime),
+            niceNumber(r.avgTurnaroundTime), niceNumber(r.avgResponseTime),
+            niceNumber(r.cpuUtilization), niceNumber(r.throughput, 3)};
+        for (int j = 0; j < values.size(); ++j) {
+            auto* item = new QTableWidgetItem(values.at(j));
+            if (j > 0) item->setTextAlignment(Qt::AlignCenter);
+            comparisonTable->setItem(i, j, item);
+        }
+        if (r.avgWaitingTime < bestWait - 1e-9) {
+            bestWait = r.avgWaitingTime;
+            winners = {name};
+        } else if (std::abs(r.avgWaitingTime - bestWait) < 1e-9) {
+            winners.append(name);
+        }
+    }
+    comparisonInsight->setText(QString("<b>Lowest average waiting time:</b> %1 (%2 time units). "
+        "This is one useful metric, not an overall winner: Round Robin can improve fairness and response, "
+        "while SJF/SRTF may favor short jobs. Priority scheduling may starve low-priority processes.")
+        .arg(winners.join(" / "), niceNumber(bestWait)));
 }
 
 QStringList SchedulingWindow::buildLogs() const
@@ -501,32 +602,17 @@ void SchedulingWindow::populateResultTable()
 
 void SchedulingWindow::saveSimulation()
 {
-    if (result.processes.empty() || result.ganttChart.empty())
+    if (result.processes.empty() || result.ganttChart.empty()) {
+        QMessageBox::information(this, "Nothing to save", "Run a CPU scheduling simulation first.");
         return;
+    }
 
-    const QString algorithm = algorithmKey();
-    QString fileAlgorithm = algorithm;
-    fileAlgorithm.replace(' ', '_');
-    const QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
-    const QString defaultName = QString("OSimX_%1_%2.osimx.json")
-                                    .arg(fileAlgorithm)
-                                    .arg(timestamp);
-
-    const QString path = QFileDialog::getSaveFileName(
-        this,
-        "Save Simulation",
-        defaultName,
-        "OSimX Simulation (*.osimx.json);;JSON Files (*.json)"
-    );
-
-    if (path.isEmpty())
-        return;
-
+    const QString algorithm = lastRunAlgorithm.isEmpty() ? algorithmKey() : lastRunAlgorithm;
     QJsonObject root;
     root["application"] = "OSimX";
     root["module"] = "CPU Scheduling";
     root["algorithm"] = algorithm;
-    root["timeQuantum"] = quantumSpinBox->value();
+    root["timeQuantum"] = lastRunQuantum;
     root["savedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
 
     QJsonArray processes;
@@ -562,23 +648,21 @@ void SchedulingWindow::saveSimulation()
     metrics["cpuUtilization"] = result.cpuUtilization;
     metrics["throughput"] = result.throughput;
     root["metrics"] = metrics;
-
     QJsonArray decisionLog;
-    for (const auto& entry : resultLogs)
-        decisionLog.append(entry);
+    for (const auto& entry : resultLogs) decisionLog.append(entry);
     root["decisionLog"] = decisionLog;
 
-    QFile file(path);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QMessageBox::warning(this, "Save failed", "OSimX could not write the simulation file.");
+    QString error;
+    if (!SimulationRepository::instance().save("CPU Scheduling", algorithm,
+            QString("%1 processes · avg wait %2").arg(result.processes.size()).arg(result.avgWaitingTime, 0, 'f', 2), root, error)) {
+        QMessageBox::warning(this, "Save failed", error);
         return;
     }
-
-    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
-    file.close();
-
-    statusLabel->setText(QString("Simulation saved to %1").arg(path));
+    statusLabel->setText("Simulation saved to your profile.");
+    emit simulationSaved();
+    QMessageBox::information(this, "Simulation saved", "This run is saved in your OSimX profile on the home screen.");
 }
+
 
 void SchedulingWindow::onPlaybackIndex(int index)
 {
@@ -604,4 +688,93 @@ void SchedulingWindow::updatePlaybackState(int index)
     } else {
         statusLabel->setText(resultLogs.value(index, QString("t=%1→%2 · P%3 is executing.").arg(segment.startTime).arg(segment.endTime).arg(segment.pid)));
     }
+}
+
+
+bool SchedulingWindow::restoreSimulation(const QJsonObject& saved)
+{
+    const QString algorithm = saved.value("algorithm").toString();
+    const int index = algorithmCombo->findText(algorithm);
+    const int quantum = saved.value("timeQuantum").toInt(1);
+    if (index < 0 || quantum < quantumSpinBox->minimum() ||
+        quantum > quantumSpinBox->maximum() ||
+        !saved.value("processes").isArray() ||
+        !saved.value("timeline").isArray() ||
+        !saved.value("metrics").isObject())
+        return false;
+
+    const QJsonArray processes = saved.value("processes").toArray();
+    const QJsonArray timeline = saved.value("timeline").toArray();
+    const QJsonObject metrics = saved.value("metrics").toObject();
+    if (processes.isEmpty() || timeline.isEmpty() ||
+        processes.size() > 10000 || timeline.size() > 100000)
+        return false;
+
+    SchedulingResult restored;
+    for (const auto& value : processes) {
+        if (!value.isObject()) return false;
+        const QJsonObject item = value.toObject();
+        for (const char* key : {"pid", "arrival", "burst", "priority", "start", "completion", "waiting", "turnaround", "response"})
+            if (!item.value(QLatin1String(key)).isDouble()) return false;
+        Process process(item.value("pid").toInt(), item.value("arrival").toInt(),
+                        item.value("burst").toInt(), item.value("priority").toInt());
+        if (process.id <= 0 || process.arrivalTime < 0 || process.burstTime <= 0) return false;
+        process.startTime = item.value("start").toInt();
+        process.completionTime = item.value("completion").toInt();
+        process.waitingTime = item.value("waiting").toInt();
+        process.turnaroundTime = item.value("turnaround").toInt();
+        process.responseTime = item.value("response").toInt();
+        process.remainingTime = 0;
+        restored.processes.push_back(process);
+    }
+    for (const auto& value : timeline) {
+        if (!value.isObject()) return false;
+        const QJsonObject item = value.toObject();
+        if (!item.value("pid").isDouble() || !item.value("start").isDouble() ||
+            !item.value("end").isDouble()) return false;
+        GanttChart segment;
+        segment.pid = item.value("pid").toInt();
+        segment.startTime = item.value("start").toInt();
+        segment.endTime = item.value("end").toInt();
+        if (segment.startTime < 0 || segment.endTime <= segment.startTime) return false;
+        restored.ganttChart.push_back(segment);
+    }
+    for (const char* key : {"averageWaiting", "averageTurnaround", "averageResponse", "cpuUtilization", "throughput"})
+        if (!metrics.value(QLatin1String(key)).isDouble()) return false;
+    restored.avgWaitingTime = metrics.value("averageWaiting").toDouble();
+    restored.avgTurnaroundTime = metrics.value("averageTurnaround").toDouble();
+    restored.avgResponseTime = metrics.value("averageResponse").toDouble();
+    restored.cpuUtilization = metrics.value("cpuUtilization").toDouble();
+    restored.throughput = metrics.value("throughput").toDouble();
+
+    QStringList savedLogs;
+    if (saved.value("decisionLog").isArray()) {
+        for (const auto& value : saved.value("decisionLog").toArray()) {
+            if (!value.isString()) return false;
+            savedLogs << value.toString();
+        }
+    }
+
+    algorithmCombo->setCurrentIndex(index);
+    quantumSpinBox->setValue(quantum);
+    processTable->setRowCount(static_cast<int>(restored.processes.size()));
+    for (int row = 0; row < processTable->rowCount(); ++row) {
+        const auto& process = restored.processes[static_cast<std::size_t>(row)];
+        processTable->setItem(row, 0, new QTableWidgetItem(QString::number(process.id)));
+        processTable->setItem(row, 1, new QTableWidgetItem(QString::number(process.arrivalTime)));
+        processTable->setItem(row, 2, new QTableWidgetItem(QString::number(process.burstTime)));
+        processTable->setItem(row, 3, new QTableWidgetItem(QString::number(process.priority)));
+    }
+    result = std::move(restored);
+    lastRunAlgorithm = algorithm;
+    lastRunQuantum = quantum;
+    resultLogs = savedLogs.isEmpty() ? buildLogs() : savedLogs;
+    ganttWidget->setGanttData(result.ganttChart);
+    playback->setTotal(static_cast<int>(result.ganttChart.size()));
+    logs->setLogs(resultLogs);
+    updateMetrics();
+    populateResultTable();
+    updatePlaybackState(0);
+    saveButton->setEnabled(true);
+    return true;
 }

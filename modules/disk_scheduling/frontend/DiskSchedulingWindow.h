@@ -7,6 +7,7 @@
 #include <QSpinBox>
 #include <QTableWidget>
 #include <QWidget>
+#include <QJsonObject>
 #include <QPushButton>
 #include "models/DiskResult.h"
 #include "ui/common/PlaybackBar.h"
@@ -17,8 +18,10 @@ class DiskSchedulingWindow : public QWidget {
     Q_OBJECT
 public:
     explicit DiskSchedulingWindow(QWidget* parent = nullptr);
+    bool restoreSimulation(const QJsonObject& saved);
 signals:
     void backRequested();
+    void simulationSaved();
 private slots:
     void addRequest();
     void removeSelectedRequests();
@@ -41,6 +44,10 @@ private:
     PlaybackBar* playback = nullptr;
     SimulationLogWidget* logs = nullptr;
     DiskTrackWidget* track = nullptr;
+    int lastRunHead = 0;
+    int lastRunMaxCylinder = 199;
+    QString lastRunDirection;
+    std::vector<int> lastRunRequests;
     DiskResult result;
     QStringList resultLogs;
 

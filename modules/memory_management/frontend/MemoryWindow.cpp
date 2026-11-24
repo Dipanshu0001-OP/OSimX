@@ -18,6 +18,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QRegularExpression>
 #include <QScrollBar>
 #include <QSplitter>
@@ -26,6 +28,8 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <initializer_list>
+#include <utility>
 #include <functional>
 #include <memory>
 
@@ -100,7 +104,7 @@ void MemoryWindow::setupUI()
     outer->addWidget(header);
     connect(backButton, &QPushButton::clicked, this, &MemoryWindow::backRequested);
 
-    auto* tabs = new QTabWidget;
+    tabs = new QTabWidget;
     tabs->addTab(buildAllocationTab(), "Memory Allocation");
     tabs->addTab(buildPageReplacementTab(), "Page Replacement");
 
@@ -176,6 +180,66 @@ QWidget* MemoryWindow::buildAllocationTab()
     runAllocationButton->setObjectName("primaryButton");
     runAllocationButton->setMinimumHeight(44);
     controlLayout->addWidget(runAllocationButton);
+    auto* compareAllocationButton = new QPushButton("Compare All Allocation Algorithms");
+    compareAllocationButton->setObjectName("secondaryButton");
+    compareAllocationButton->setMinimumHeight(40);
+    controlLayout->addWidget(compareAllocationButton);
+    connect(compareAllocationButton, &QPushButton::clicked, this, [this]() {
+        std::vector<MemoryProcess> processes;
+        QSet<int> ids;
+        for (int row = 0; row < processTable->rowCount(); ++row) {
+            auto* idItem = processTable->item(row, 0);
+            auto* sizeItem = processTable->item(row, 1);
+            QString idText = idItem ? idItem->text().trimmed() : QString();
+            if (idText.startsWith('P', Qt::CaseInsensitive)) idText.remove(0, 1);
+            bool idOk = false, sizeOk = false;
+            int id = idText.toInt(&idOk);
+            int size = sizeItem ? sizeItem->text().trimmed().toInt(&sizeOk) : 0;
+            if (!idOk || !sizeOk || id <= 0 || size <= 0 || ids.contains(id)) {
+                QMessageBox::warning(this, "Invalid process", "Enter unique positive PIDs and positive process sizes.");
+                return;
+            }
+            ids.insert(id);
+            processes.push_back({id, size});
+        }
+        bool ok = false;
+        auto blocks = parseIntList(blockSizesEdit->text(), ok, true);
+        if (!ok || processes.empty()) {
+            QMessageBox::warning(this, "Invalid input", "Enter processes and positive memory block sizes first.");
+            return;
+        }
+        FirstFit first; BestFit best; WorstFit worst;
+        const auto a = first.allocate(blocks, processes);
+        const auto b = best.allocate(blocks, processes);
+        const auto c = worst.allocate(blocks, processes);
+        auto* dialog = new QDialog(this);
+        dialog->setAttribute(Qt::WA_DeleteOnClose);
+        dialog->setWindowTitle("Memory Allocation Comparison");
+        dialog->resize(720, 360);
+        auto* layout = new QVBoxLayout(dialog);
+        auto* intro = new QLabel("All algorithms use the same process order and memory blocks.\n"
+            "More successful allocations are better; fragmentation alone does not determine the winner.");
+        intro->setWordWrap(true);
+        layout->addWidget(intro);
+        auto* table = new QTableWidget(3, 5, dialog);
+        table->setHorizontalHeaderLabels({"Algorithm", "Allocated", "Failed", "Free memory", "Fragmentation"});
+        const AllocationResult results[] = {a, b, c};
+        const QString names[] = {"First Fit", "Best Fit", "Worst Fit"};
+        for (int i = 0; i < 3; ++i) {
+            const auto& r = results[i];
+            const QString cells[] = {names[i], QString::number(r.allocatedCount),
+                QString::number(r.failedCount), QString::number(r.totalFreeMemory),
+                QString::number(r.externalFragmentation)};
+            for (int j = 0; j < 5; ++j) table->setItem(i, j, new QTableWidgetItem(cells[j]));
+        }
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        layout->addWidget(table);
+        auto* close = new QDialogButtonBox(QDialogButtonBox::Close);
+        connect(close, &QDialogButtonBox::rejected, dialog, &QDialog::close);
+        layout->addWidget(close);
+        dialog->show();
+    });
 
     splitter->addWidget(inputBox);
     splitter->addWidget(controlBox);
@@ -313,6 +377,47 @@ QWidget* MemoryWindow::buildPageReplacementTab()
     runPageButton->setObjectName("primaryButton");
     runPageButton->setMinimumHeight(44);
     controlLayout->addWidget(runPageButton);
+    auto* comparePagesButton = new QPushButton("Compare FIFO / LRU / Optimal");
+    comparePagesButton->setObjectName("secondaryButton");
+    comparePagesButton->setMinimumHeight(40);
+    controlLayout->addWidget(comparePagesButton);
+    connect(comparePagesButton, &QPushButton::clicked, this, [this]() {
+        bool ok = false;
+        const auto refs = parseIntList(referenceStringEdit->text(), ok, false);
+        if (!ok || refs.empty()) {
+            QMessageBox::warning(this, "Invalid references", "Enter page numbers separated by commas or spaces.");
+            return;
+        }
+        const int frames = frameCountSpinBox->value();
+        FIFO fifo; LRU lru; Optimal optimal;
+        const PageReplacementResult results[] = {
+            fifo.replace(refs, frames), lru.replace(refs, frames), optimal.replace(refs, frames)};
+        const QString names[] = {"FIFO", "LRU", "Optimal"};
+        auto* dialog = new QDialog(this);
+        dialog->setAttribute(Qt::WA_DeleteOnClose);
+        dialog->setWindowTitle("Page Replacement Comparison");
+        dialog->resize(690, 350);
+        auto* layout = new QVBoxLayout(dialog);
+        auto* intro = new QLabel("All three algorithms use the same page references and frame count.\n"
+            "Fewer faults are better. Optimal looks into the future, so it is a theoretical benchmark.");
+        intro->setWordWrap(true);
+        layout->addWidget(intro);
+        auto* table = new QTableWidget(3, 4, dialog);
+        table->setHorizontalHeaderLabels({"Algorithm", "Page faults", "Page hits", "Hit ratio"});
+        for (int i = 0; i < 3; ++i) {
+            const auto& r = results[i];
+            const QString cells[] = {names[i], QString::number(r.faults),
+                QString::number(r.hits), QString::number(r.hitRatio, 'f', 2)};
+            for (int j = 0; j < 4; ++j) table->setItem(i, j, new QTableWidgetItem(cells[j]));
+        }
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        layout->addWidget(table);
+        auto* close = new QDialogButtonBox(QDialogButtonBox::Close);
+        connect(close, &QDialogButtonBox::rejected, dialog, &QDialog::close);
+        layout->addWidget(close);
+        dialog->show();
+    });
 
     splitter->addWidget(inputBox);
     splitter->addWidget(controlBox);
@@ -582,7 +687,7 @@ void MemoryWindow::saveAllocationSimulation()
         QMessageBox::information(this, "Nothing to save", "Run a memory allocation simulation first.");
         return;
     }
-    const QString algorithm = allocationAlgorithmCombo->currentText();
+    const QString algorithm = QString::fromStdString(allocationResult.algorithm);
     QJsonObject root;
     root["application"] = "OSimX";
     root["module"] = "Memory Management";
@@ -592,6 +697,14 @@ void MemoryWindow::saveAllocationSimulation()
     QJsonArray blocks;
     for (int size : allocationResult.initialBlocks) blocks.append(size);
     root["initialBlocks"] = blocks;
+    QJsonArray savedProcesses;
+    for (const auto& step : allocationResult.steps) {
+        QJsonObject entry;
+        entry["pid"] = step.pid;
+        entry["size"] = step.size;
+        savedProcesses.append(entry);
+    }
+    root["processes"] = savedProcesses;
     QJsonArray steps;
     for (const auto& step : allocationResult.steps) {
         QJsonObject item;
@@ -621,6 +734,7 @@ void MemoryWindow::saveAllocationSimulation()
         return;
     }
     allocationStatusLabel->setText("Simulation saved to your profile.");
+    emit simulationSaved();
     QMessageBox::information(this, "Simulation saved", "This run is saved in your OSimX profile on the home screen.");
 }
 
@@ -752,13 +866,17 @@ void MemoryWindow::savePageSimulation()
         QMessageBox::information(this, "Nothing to save", "Run a page replacement simulation first.");
         return;
     }
-    const QString algorithm = pageAlgorithmCombo->currentText();
+    const QString algorithm = QString::fromStdString(pageResult.algorithm);
     QJsonObject root;
     root["application"] = "OSimX";
     root["module"] = "Memory Management";
     root["mode"] = "Page Replacement";
     root["algorithm"] = algorithm;
     root["frameCount"] = pageResult.frameCount;
+    QJsonArray references;
+    for (const auto& step : pageResult.steps)
+        references.append(step.page);
+    root["referenceString"] = references;
     root["savedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     QJsonArray steps;
     for (const auto& step : pageResult.steps) {
@@ -788,6 +906,7 @@ void MemoryWindow::savePageSimulation()
         return;
     }
     pageStatusLabel->setText("Simulation saved to your profile.");
+    emit simulationSaved();
     QMessageBox::information(this, "Simulation saved", "This run is saved in your OSimX profile on the home screen.");
 }
 
@@ -810,4 +929,136 @@ void MemoryWindow::updatePagePlaybackState(int index)
     pageLogs->revealUpTo(index);
     pageStepLabel->setText(QString("Step %1 / %2").arg(index + 1).arg(pageResult.steps.size()));
     pageStatusLabel->setText(pageResultLogs.value(index, "Replacing..."));
+}
+
+
+bool MemoryWindow::restoreSimulation(const QJsonObject& saved)
+{
+    const QString mode = saved.value("mode").toString();
+    const QString algorithm = saved.value("algorithm").toString();
+    const QJsonObject metrics = saved.value("metrics").toObject();
+    if (!saved.value("steps").isArray() || !saved.value("metrics").isObject())
+        return false;
+    const QJsonArray steps = saved.value("steps").toArray();
+    if (steps.isEmpty() || steps.size() > 100000) return false;
+
+    auto readIntegers = [](const QJsonValue& value, std::vector<int>& values) {
+        if (!value.isArray()) return false;
+        for (const auto& entry : value.toArray()) {
+            if (!entry.isDouble()) return false;
+            values.push_back(entry.toInt());
+        }
+        return true;
+    };
+    QStringList savedLogs;
+    if (saved.value("decisionLog").isArray()) {
+        for (const auto& value : saved.value("decisionLog").toArray()) {
+            if (!value.isString()) return false;
+            savedLogs << value.toString();
+        }
+    }
+
+    if (mode == "Allocation") {
+        const int index = allocationAlgorithmCombo->findText(algorithm);
+        if (index < 0) return false;
+        AllocationResult restored;
+        restored.algorithm = algorithm.toStdString();
+        if (!readIntegers(saved.value("initialBlocks"), restored.initialBlocks) ||
+            restored.initialBlocks.empty()) return false;
+        for (int block : restored.initialBlocks)
+            if (block <= 0) return false;
+        for (const auto& value : steps) {
+            if (!value.isObject()) return false;
+            const QJsonObject item = value.toObject();
+            for (const char* key : {"pid", "size", "blockIndex"})
+                if (!item.value(QLatin1String(key)).isDouble()) return false;
+            AllocationStep step;
+            step.pid = item.value("pid").toInt();
+            step.size = item.value("size").toInt();
+            step.blockIndex = item.value("blockIndex").toInt();
+            if (step.pid <= 0 || step.size <= 0 ||
+                step.blockIndex < -1 ||
+                step.blockIndex >= static_cast<int>(restored.initialBlocks.size()) ||
+                !readIntegers(item.value("blocksAfter"), step.blocksAfter) ||
+                step.blocksAfter.size() != restored.initialBlocks.size()) return false;
+            restored.steps.push_back(std::move(step));
+        }
+        for (const char* key : {"allocatedCount", "failedCount", "totalFreeMemory", "largestFreeBlock", "externalFragmentation"})
+            if (!metrics.value(QLatin1String(key)).isDouble()) return false;
+        restored.allocatedCount = metrics.value("allocatedCount").toInt();
+        restored.failedCount = metrics.value("failedCount").toInt();
+        restored.totalFreeMemory = metrics.value("totalFreeMemory").toInt();
+        restored.largestFreeBlock = metrics.value("largestFreeBlock").toInt();
+        restored.externalFragmentation = metrics.value("externalFragmentation").toInt();
+
+        allocationAlgorithmCombo->setCurrentIndex(index);
+        QStringList blockTexts;
+        for (int block : restored.initialBlocks)
+            blockTexts << QString::number(block);
+        blockSizesEdit->setText(blockTexts.join(", "));
+        processTable->setRowCount(static_cast<int>(restored.steps.size()));
+        for (int i = 0; i < processTable->rowCount(); ++i) {
+            const auto& step = restored.steps[static_cast<std::size_t>(i)];
+            processTable->setItem(i, 0, new QTableWidgetItem(QString("P%1").arg(step.pid)));
+            processTable->setItem(i, 1, new QTableWidgetItem(QString::number(step.size)));
+        }
+        allocationResult = std::move(restored);
+        allocationResultLogs = savedLogs.isEmpty() ? buildAllocationLogs() : savedLogs;
+        blockWidget->setResult(allocationResult);
+        allocationPlayback->setTotal(static_cast<int>(allocationResult.steps.size()));
+        allocationLogs->setLogs(allocationResultLogs);
+        updateAllocationMetrics();
+        populateAllocationResultTable();
+        updateAllocationPlaybackState(0);
+        saveAllocationButton->setEnabled(true);
+        tabs->setCurrentIndex(0);
+        return true;
+    }
+
+    if (mode == "Page Replacement") {
+        const int index = pageAlgorithmCombo->findText(algorithm);
+        const int frameCount = saved.value("frameCount").toInt(-1);
+        if (index < 0 || frameCount < frameCountSpinBox->minimum() ||
+            frameCount > frameCountSpinBox->maximum()) return false;
+        PageReplacementResult restored;
+        restored.algorithm = algorithm.toStdString();
+        restored.frameCount = frameCount;
+        QStringList references;
+        for (const auto& value : steps) {
+            if (!value.isObject()) return false;
+            const QJsonObject item = value.toObject();
+            if (!item.value("page").isDouble() || !item.value("hit").isBool() ||
+                !item.value("victim").isDouble()) return false;
+            PageStep step;
+            step.page = item.value("page").toInt();
+            step.hit = item.value("hit").toBool();
+            step.victim = item.value("victim").toInt();
+            if (step.page < 0 || !readIntegers(item.value("frames"), step.frames) ||
+                static_cast<int>(step.frames.size()) != frameCount) return false;
+            restored.steps.push_back(std::move(step));
+            references << QString::number(restored.steps.back().page);
+        }
+        for (const char* key : {"hits", "faults", "hitRatio", "faultRatio"})
+            if (!metrics.value(QLatin1String(key)).isDouble()) return false;
+        restored.hits = metrics.value("hits").toInt();
+        restored.faults = metrics.value("faults").toInt();
+        restored.hitRatio = metrics.value("hitRatio").toDouble();
+        restored.faultRatio = metrics.value("faultRatio").toDouble();
+
+        pageAlgorithmCombo->setCurrentIndex(index);
+        frameCountSpinBox->setValue(frameCount);
+        referenceStringEdit->setText(references.join(", "));
+        pageResult = std::move(restored);
+        pageResultLogs = savedLogs.isEmpty() ? buildPageLogs() : savedLogs;
+        frameWidget->setResult(pageResult);
+        pagePlayback->setTotal(static_cast<int>(pageResult.steps.size()));
+        pageLogs->setLogs(pageResultLogs);
+        updatePageMetrics();
+        populatePageResultTable();
+        updatePagePlaybackState(0);
+        savePageButton->setEnabled(true);
+        tabs->setCurrentIndex(1);
+        return true;
+    }
+    return false;
 }
